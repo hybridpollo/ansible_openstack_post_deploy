@@ -1,0 +1,164 @@
+# Playbook demonstrating the use of the openstack.cloud.* modules for automation of
+# creation of OpenStack resources. This bootstrap the initial resources
+# generally not created by default following a fresh installation of Openstack
+# 
+# This playbook performs the following actions with ansible variables defined in
+# a vars file
+# - creates default openstack flavors
+# - upload images to the openstack image store
+# - creates neutron provider networks
+# - creates neutron provider subnets
+# - creates security groups
+# - create security group rules
+---
+- name: Begin to boostrap OpenStack cluster following a fresh deployment
+  hosts: ansible_executor
+  become: false
+  vars_files:
+    - vars/vaulted/openstack_auth.yml
+    - vars/openstack_resources_shared.yml
+  tasks:
+    - name: Create the default OpenStack flavors 
+      openstack.cloud.compute_flavor:
+        auth:
+          auth_url: '{{ openstack_auth_url }}'
+          username: '{{ openstack_username }}'
+          password: '{{ openstack_user_passwd }}'
+          project_name: '{{ openstack_project_name }}'
+          project_domain_name: '{{ openstack_project_domain | default("Default") }}'
+          user_domain_name: '{{ openstack_user_domain_name | default("Default") }}'
+        interface: '{{ osp_interface_type | default("public") }}'
+        name: '{{ item.name }}'
+        vcpus: '{{ item.vcpus }}'
+        ram: '{{ item.ram_mb }}'
+        disk: '{{ item.disk_gb }}'
+        state: present
+      loop: '{{ osp_flavors }}'
+      when: create_osp_flavors == True
+      tags:
+        - create_flavors
+
+    - name: Download + stage OpenStack image files to a temporary location for Glance upload
+      get_url:
+        url: '{{ source_image_base_url }}/{{ item.source_image_name }}'
+        dest: '{{ source_image_download_dir }}/{{ item.source_image_name }}'
+      loop:  '{{ osp_glance_images }}'
+      when: upload_glance_images == True
+      tags:
+        -  upload_glance_images
+
+    - name: Upload the OpenStack images to Glance
+      openstack.cloud.image:
+        auth:
+          auth_url: '{{ openstack_auth_url }}'
+          username: '{{ openstack_username }}'
+          password: '{{ openstack_user_passwd }}'
+          project_name: '{{ openstack_project_name }}'
+          project_domain_name: '{{ openstack_project_domain | default("Default") }}'
+          user_domain_name: '{{ openstack_user_domain_name | default("Default") }}'
+        interface: '{{ osp_interface_type | default("public") }}'
+        name: '{{ item.name }}'
+        container_format: '{{ item.container_format }}'
+        disk_format: '{{ item.disk_format }}'
+        filename: '{{ source_image_download_dir }}/{{ item.source_image_name }}'  
+        is_public: '{{ item.image_is_public | default(false) }}'
+        state: present
+        properties:
+          hw_vif_multiqueue_enabled: '{{ item.image_hw_vif_multiqueue_enabled | default("true" | string) }}'
+          hw_scsi_model: '{{ item.image_hw_scsi_model | default("virtio-scsi" | string) }}'
+          hw_disk_bus: '{{ item.image_hw_disk_bus | default("scsi" | string) }}'
+      loop: '{{ osp_glance_images }}'
+      when: upload_glance_images == True
+      tags:
+        -  upload_glance_images
+
+    - name: Create the shared Neutron provider networks
+      openstack.cloud.network:
+        auth:
+          auth_url: '{{ openstack_auth_url }}'
+          username: '{{ openstack_username }}'
+          password: '{{ openstack_user_passwd }}'
+          project_name: '{{ openstack_project_name }}'
+          project_domain_name: '{{ openstack_project_domain | default("Default") }}'
+          user_domain_name: '{{ openstack_user_domain_name | default("Default") }}'
+        interface: '{{ osp_interface_type | default("public") }}'
+        name: '{{ item.net_name }}' 
+        external: '{{ item.net_external | default(false) }}'
+        shared: '{{ item.net_is_shared | default(false) }}'
+        provider_network_type: '{{ item.provider_network_type }}'
+        provider_physical_network: '{{ item.physical_network }}'
+        provider_segmentation_id: '{{ item.net_segment_id }}'
+        port_security_enabled: '{{ item.enable_port_security | default(true) }}'
+        state: present
+      loop: '{{ osp_provider_networks }}'
+      when: create_provider_networks == True
+      tags:
+        - create_provider_networks
+
+    - name: Create Neutron provider subnets
+      openstack.cloud.subnet:
+        auth:
+          auth_url: '{{ openstack_auth_url }}'
+          username: '{{ openstack_username }}'
+          password: '{{ openstack_user_passwd }}'
+          project_name: '{{ openstack_project_name }}'
+          project_domain_name: '{{ openstack_project_domain | default("Default") }}'
+          user_domain_name: '{{ openstack_user_domain_name | default("Default") }}'
+        interface: '{{ osp_interface_type | default("public") }}'
+        network_name: '{{ item.net_name }}'
+        name: '{{ item.subnets.subnet_name }}'
+        cidr: '{{ item.subnets.subnet_cidr }}'
+        gateway_ip: '{{ item.subnets.subnet_gateway }}'
+        allocation_pool_start: '{{ item.subnets.subnet_dhcp_start }}'
+        allocation_pool_end: '{{ item.subnets.subnet_dhcp_end }}'
+        enable_dhcp: '{{ item.subnets.subnet_enable_dhcp }}'
+        dns_nameservers:
+          - '{{ item.subnets.dns_1 }}'
+          - '{{ item.subnets.dns_2 }}'
+        state: present
+      loop: '{{ osp_provider_networks }}'
+      when: create_provider_networks == True 
+      tags:
+        - create_provider_networks
+
+    - name: Creating project security groups
+      openstack.cloud.security_group:
+        auth:
+          auth_url: '{{ openstack_auth_url }}'
+          username: '{{ openstack_username }}'
+          password: '{{ openstack_user_passwd }}'
+          project_name: '{{ openstack_project_name }}'
+          project_domain_name: '{{ openstack_project_domain | default("Default") }}'
+          user_domain_name: '{{ openstack_user_domain_name | default("Default") }}'
+        name: '{{ item.secgroup_name }}' 
+        project: '{{ item.secgroup_owner_project }}'
+        state: present
+      loop: '{{ osp_sec_groups }}'
+      when: create_project_security_groups == True 
+      tags:
+        - create_security_group
+
+    - name: Creating project security group rules
+      openstack.cloud.security_group_rule:
+        auth:
+          auth_url: '{{ openstack_auth_url }}'
+          username: '{{ openstack_username }}'
+          password: '{{ openstack_user_passwd }}'
+          project_name: '{{ openstack_project_name }}'
+          project_domain_name: '{{ openstack_project_domain | default("Default") }}'
+          user_domain_name: '{{ openstack_user_domain_name | default("Default") }}'
+        security_group: '{{ item.0.secgroup_name | string }}'
+        project: '{{ item.0.secgroup_owner_project | string }}'
+        direction: '{{ item.1.direction | default("ingress" | string) }}'
+        ethertype: '{{ item.1.ethertype | default("IPv4" | string) }}'
+        protocol: '{{ item.1.protocol | default("tcp" | string) }}'
+        remote_ip_prefix: '{{ item.1.source_network | default("0.0.0.0.0" | string) }}'
+        port_range_min: '{{ item.1.port_range_min | int }}'
+        port_range_max: '{{ item.1.port_range_max | int }}'
+        state: present
+      with_subelements: 
+        - '{{ osp_sec_groups }}'
+        - sec_group_rules
+      when: create_project_security_groups == True 
+      tags:
+        - create_security_group

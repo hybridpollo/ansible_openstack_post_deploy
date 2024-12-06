@@ -1,0 +1,211 @@
+---
+###################################
+# General variables
+###################################
+# openstack_auth_url:    THIS IS A VAULTED VARIABLE
+# openstack_username:    THIS IS A VAULTED VARIABLE
+# openstack_user_passwd: THIS IS A VAULTED VARIABLE
+#
+openstack_project_name: admin
+openstack_project_domain_name: Default
+openstack_user_domain_name: Default
+openstack_network_name: external_shared_net
+openstack_subnet_name: external_shared_subnet
+
+###################################
+# Compute flavor creation variables
+###################################
+create_osp_flavors: true
+osp_flavors:
+# compute intensive flavors
+  - name: c.micro
+    vcpus: 2 
+    ram_mb: 1024
+    disk_gb: 10
+  - name: c.tiny
+    vcpus: 4 
+    ram_mb: 1024
+    disk_gb: 10
+  - name: c.small
+    vcpus: 8 
+    ram_mb: 2048
+    disk_gb: 20
+  - name: c.medium
+    vcpus: 16
+    ram_mb: 2048
+    disk_gb: 50
+  - name: c.large
+    vcpus: 32
+    ram_mb: 4096
+    disk_gb: 75
+  - name: c.1xlarge
+    vcpus: 64
+    ram_mb: 16384
+    disk_gb: 100
+# general purpose flavors
+  - name: g.micro
+    vcpus: 1 
+    ram_mb: 1024
+    disk_gb: 10
+  - name: g.tiny
+    vcpus: 1 
+    ram_mb: 2048
+    disk_gb: 20
+  - name: g.small
+    vcpus: 2 
+    ram_mb: 4096
+    disk_gb: 50
+  - name: g.medium
+    vcpus: 4 
+    ram_mb: 8192
+    disk_gb: 100
+  - name: g.large
+    vcpus: 8 
+    ram_mb: 16384
+    disk_gb: 200
+  - name: g.1xlarge
+    vcpus:  16
+    ram_mb: 32768
+    disk_gb: 300
+  - name: g.2xlarge
+    vcpus:  16
+    ram_mb: 65536
+    disk_gb: 500
+# flavors used for openshift infrastructure
+  - name: ocp-control
+    vcpus:  16
+    ram_mb: 32768
+    disk_gb: 100
+  - name: ocp-compute
+    vcpus:  32
+    ram_mb: 65534
+    disk_gb: 200
+
+#################################
+# Glance image creation variables
+#################################
+#
+# source_image_base_url: is a simple http server
+# hosting the qcow2 images for fetching and uploading
+# to Glance
+upload_glance_images: true
+source_image_base_url: http://kvm1.voltron.xyz/pub/os_images
+source_image_download_dir: /tmp
+osp_glance_images:
+  - name: cirros-0.6.2
+    container_format: bare
+    disk_format: qcow2
+    source_image_name: cirros-0.6.2-x86_64-disk.img
+    image_is_public: true
+    image_hw_vif_multiqueue_enabled: true
+    image_hw_scsi_model: virtio-scsi
+    image_hw_disk_bus: scsi
+  - name: ubuntu-24-04
+    container_format: bare
+    disk_format: qcow2
+    source_image_name: noble-server-cloudimg-amd64.img
+    image_is_public: true
+    image_hw_vif_multiqueue_enabled: true
+    image_hw_scsi_model: virtio-scsi
+    image_hw_disk_bus: scsi
+  - name: centos-7-9
+    container_format: bare
+    disk_format: qcow2
+    source_image_name: CentOS-7-x86_64-GenericCloud.qcow2
+    image_is_public: true
+    image_hw_vif_multiqueue_enabled: true
+    image_hw_scsi_model: virtio-scsi
+    image_hw_disk_bus: scsi
+  - name: centos-8-streams
+    container_format: bare
+    disk_format: qcow2
+    source_image_name: CentOS-Stream-GenericCloud-8-latest.x86_64.qcow2
+    image_is_public: true
+    image_hw_vif_multiqueue_enabled: true
+    image_hw_scsi_model: virtio-scsi
+    image_hw_disk_bus: scsi
+  - name: centos-9-streams
+    container_format: bare
+    disk_format: qcow2
+    source_image_name: CentOS-Stream-GenericCloud-9-20240101.0.x86_64.qcow2
+    image_is_public: true
+    image_hw_vif_multiqueue_enabled: true
+    image_hw_scsi_model: virtio-scsi
+    image_hw_disk_bus: scsi
+  - name: rhel-8.9
+    container_format: bare
+    disk_format: qcow2
+    source_image_name: rhel-8.9-x86_64-kvm.qcow2
+    image_is_public: true
+    image_hw_vif_multiqueue_enabled: true
+    image_hw_scsi_model: virtio-scsi
+    image_hw_disk_bus: scsi
+  - name: rhel-9.2
+    container_format: bare
+    disk_format: qcow2
+    source_image_name: rhel-9.2-x86_64-kvm.qcow2
+    image_is_public: true
+    image_hw_vif_multiqueue_enabled: true
+    image_hw_scsi_model: virtio-scsi
+    image_hw_disk_bus: scsi
+  - name: rhel-9.4
+    container_format: bare
+    disk_format: qcow2
+    source_image_name: rhel-9.4-x86_64-kvm.qcow2
+    image_is_public: true
+    image_hw_vif_multiqueue_enabled: true
+    image_hw_scsi_model: virtio-scsi
+    image_hw_disk_bus: scsi
+  - name: debian-bullseye
+    container_format: bare
+    disk_format: qcow2
+    source_image_name: debian-11-genericcloud-amd64-20241007-1893.qcow2 
+    image_is_public: true
+    image_hw_vif_multiqueue_enabled: true
+    image_hw_scsi_model: virtio-scsi
+    image_hw_disk_bus: scsi
+
+
+##############################
+# Security Groups and Rules
+##############################
+create_project_security_groups: true
+osp_sec_groups:
+  - secgroup_name: 'allow_ssh_icmp_{{openstack_project_name }}'
+    secgroup_owner_project: '{{ openstack_project_name }}'
+    sec_group_rules:
+      - direction: ingress
+        source_network: 0.0.0.0/0
+        port_range_min: 22
+        port_range_max: 22
+        protocol: tcp
+        ethertype: IPv4
+      - direction: ingress 
+        source_network: 0.0.0.0/0
+        port_range_min: -1
+        port_range_max: -1
+        protocol: icmp
+        ethertype: IPv4
+
+##############################
+# Neutron Networks, Subnets
+# TODO: Neutron routers
+##############################
+create_provider_networks: true
+osp_provider_networks:
+  - net_name: '{{ openstack_network_name }}'
+    network_project_owner: '{{ openstack_project_name }}'
+    net_external: true
+    net_is_shared: true
+    physical_network: datacentre
+    provider_network_type: vlan
+    net_segment_id: 100
+    subnets:
+      subnet_name: '{{ openstack_subnet_name }}'
+      subnet_enable_dhcp: true
+      subnet_cidr: 192.168.100.0/24
+      subnet_gateway: 192.168.100.1
+      subnet_dhcp_start: 192.168.100.30
+      subnet_dhcp_end: 192.168.100.254
+      dns_1: 172.25.49.253
+      dns_2: 172.25.49.254

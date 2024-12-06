@@ -1,0 +1,117 @@
+# Ansible playbook demonstrating the use of
+# the openstack.cloud.* modules for automation of
+# OpenStack resources
+# 
+# This playbook performs the following
+# - deletes defined flavors in var file
+# - deletes defined images in var file 
+# - deletes defined neutron provider networks in var file
+# - deletes defined neutron provider subnets in var file
+# - deletes defied security groups in var file
+#   deleting security group will also delete security group rules
+---
+- hosts: ansible_executor
+  become: false
+  vars_files:
+    - vars/openstack_resources_shared.yml
+    - vars/vaulted/openstack_auth.yml
+  tasks:
+    - ansible.builtin.pause:
+        prompt: 'Warning: Running this playbook will destroy all defined OpenStack resources. Proceed with deletion: (yes/no)'
+      register: delete_response
+      delegate_to: localhost
+      tags:
+        - delete_flavors
+        - delete_glance_images 
+        - delete_provider_networks
+        - delete_security_groups
+
+    - ansible.builtin.fail:
+        msg: 'Canceled OpenStack resource deletion operation. Exiting!'
+      when:
+        - delete_response.user_input == 'no' or delete_response.user_input == 'n'
+      tags:
+        - delete_flavors
+        - delete_glance_images 
+        - delete_provider_networks
+        - delete_security_groups
+
+    - name: Delete the OpenStack default flavors 
+      openstack.cloud.compute_flavor:
+        auth:
+          auth_url: '{{ openstack_auth_url }}'
+          username: '{{ openstack_username }}'
+          password: '{{ openstack_user_passwd }}'
+          project_name: '{{ openstack_project_name }}'
+          project_domain_name: '{{ openstack_project_domain | default("Default") }}'
+          user_domain_name: '{{ openstack_user_domain_name | default("Default") }}'
+        interface: '{{ osp_interface_type | default("public") }}'
+        name: '{{ item.name }}'
+        state: absent
+      loop: '{{ osp_flavors }}'
+      tags:
+        - delete_flavors
+
+    - name: Delete the OpenStack images from Glance
+      openstack.cloud.image:
+        auth:
+          auth_url: '{{ openstack_auth_url }}'
+          username: '{{ openstack_username }}'
+          password: '{{ openstack_user_passwd }}'
+          project_name: '{{ openstack_project_name }}'
+          project_domain_name: '{{ openstack_project_domain | default("Default") }}'
+          user_domain_name: '{{ openstack_user_domain_name | default("Default") }}'
+        interface: '{{ osp_interface_type | default("public") }}'
+        name: '{{ item.name }}'
+        state: absent
+      loop: '{{ osp_glance_images }}'
+      tags:
+        -  delete_glance_images
+
+    - name: Delete project security groups
+      openstack.cloud.security_group:
+        auth:
+          auth_url: '{{ openstack_auth_url }}'
+          username: '{{ openstack_username }}'
+          password: '{{ openstack_user_passwd }}'
+          project_name: '{{ openstack_project_name }}'
+          project_domain_name: '{{ openstack_project_domain | default("Default") }}'
+          user_domain_name: '{{ openstack_user_domain_name | default("Default") }}'
+        interface: '{{ osp_interface_type | default("public") }}'
+        name: '{{ item.secgroup_name }}' 
+        state: absent
+      loop: '{{ osp_sec_groups }}'
+      tags:
+        - delete_security_groups
+
+    - name: Delete the Neutron provider subnets
+      openstack.cloud.subnet:
+        auth:
+          auth_url: '{{ openstack_auth_url }}'
+          username: '{{ openstack_username }}'
+          password: '{{ openstack_user_passwd }}'
+          project_name: '{{ openstack_project_name }}'
+          project_domain_name: '{{ openstack_project_domain | default("Default") }}'
+          user_domain_name: '{{ openstack_user_domain_name | default("Default") }}'
+        interface: '{{ osp_interface_type | default("public") }}'
+        name: '{{ item.subnets.subnet_name }}'
+        state: absent
+      loop: '{{ osp_provider_networks }}'
+      tags:
+        - delete_provider_networks
+
+    - name: Delete the shared Neutron provider networks
+      openstack.cloud.network:
+        auth:
+          auth_url: '{{ openstack_auth_url }}'
+          username: '{{ openstack_username }}'
+          password: '{{ openstack_user_passwd }}'
+          project_name: '{{ openstack_project_name }}'
+          project_domain_name: '{{ openstack_project_domain | default("Default") }}'
+          user_domain_name: '{{ openstack_user_domain_name | default("Default") }}'
+        interface: '{{ osp_interface_type | default("public") }}'
+        name: '{{ item.net_name }}' 
+        state: absent
+      loop: '{{ osp_provider_networks }}'
+      tags:
+        - delete_provider_networks

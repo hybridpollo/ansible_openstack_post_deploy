@@ -55,7 +55,7 @@ openstack_user_passwd: iliketurtles
 ```
 - These playbooks while fully functional are by no means complete and you may run into issues, however they provide a decent baseline for you to start with.
 
-- Most issues that I have encountered has been related to version mismatches between OpenStack SDK and the Ansible Collection versions. Review the Ansible OpenStack Collection documentation to ensure you are aligned with the collection and OpenStack SDK versions supported by your OpenStack environment: [https://github.com/openstack/ansible-collections-openstack/tree/stable/1.0.0](https://github.com/openstack/ansible-collections-openstack/tree/stable/1.0.0)
+- Most issues that I have encountered has been related to version mismatches between OpenStack SDK and the Ansible Collection versions. Review the Ansible OpenStack Collection documentation to ensure you are aligned with the collection and OpenStack SDK versions supported by your OpenStack environment: [https://github.com/openstack/ansible-collections-openstack](https://github.com/openstack/ansible-collections-openstack)
 
 - Sample ansible.cfg file. These playbooks run from the same host where the requirements are installed, but can also be modified to your preferences. My example uses the vault_password_file parameter for vault decryption without a user prompt:
 ```

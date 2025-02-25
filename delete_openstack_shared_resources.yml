@@ -46,7 +46,7 @@
           project_domain_name: '{{ openstack_project_domain | default("Default") }}'
           user_domain_name: '{{ openstack_user_domain_name | default("Default") }}'
         interface: '{{ osp_interface_type | default("public") }}'
-        name: '{{ item.name }}'
+        name: '{{ item.name | string }}'
         state: absent
       loop: '{{ osp_flavors }}'
       tags:
@@ -62,7 +62,7 @@
           project_domain_name: '{{ openstack_project_domain | default("Default") }}'
           user_domain_name: '{{ openstack_user_domain_name | default("Default") }}'
         interface: '{{ osp_interface_type | default("public") }}'
-        name: '{{ item.name }}'
+        name: '{{ item.name | string }}'
         state: absent
       loop: '{{ osp_glance_images }}'
       tags:
@@ -78,7 +78,7 @@
           project_domain_name: '{{ openstack_project_domain | default("Default") }}'
           user_domain_name: '{{ openstack_user_domain_name | default("Default") }}'
         interface: '{{ osp_interface_type | default("public") }}'
-        name: '{{ item.secgroup_name }}' 
+        name: '{{ item.secgroup_name | string }}' 
         state: absent
       loop: '{{ osp_sec_groups }}'
       tags:
@@ -94,7 +94,7 @@
           project_domain_name: '{{ openstack_project_domain | default("Default") }}'
           user_domain_name: '{{ openstack_user_domain_name | default("Default") }}'
         interface: '{{ osp_interface_type | default("public") }}'
-        name: '{{ item.subnets.subnet_name }}'
+        name: '{{ item.subnets.subnet_name | string  }}'
         state: absent
       loop: '{{ osp_provider_networks }}'
       tags:
@@ -110,7 +110,7 @@
           project_domain_name: '{{ openstack_project_domain | default("Default") }}'
           user_domain_name: '{{ openstack_user_domain_name | default("Default") }}'
         interface: '{{ osp_interface_type | default("public") }}'
-        name: '{{ item.net_name }}' 
+        name: '{{ item.net_name | string }}' 
         state: absent
       loop: '{{ osp_provider_networks }}'
       tags:

@@ -31,8 +31,8 @@
           project_domain_name: '{{ openstack_project_domain_name | default("Default") }}'
           user_domain_name: '{{ openstack_user_domain_name | default("Default") }}'
         endpoint_type: '{{ osp_interface_type | default("public") }}'
-        domain_id: '{{ item.keystone_domain }}'
-        name: '{{ item.name }}' 
+        domain_id: '{{ item.keystone_domain | string }}'
+        name: '{{ item.name | string }}'
         state: present
         enabled: true
       loop: '{{ osp_projects }}'
@@ -50,12 +50,12 @@
           project_domain_name: '{{ openstack_project_domain_name | default("Default") }}'
           user_domain_name: '{{ openstack_user_domain_name | default("Default") }}'
         interface: '{{ osp_interface_type | default("public") }}'
-        name: '{{ item.name }}'
-        instances: '{{ item.quotas.total_instances }}'
-        cores: '{{ item.quotas.total_cores }}'
-        ram: '{{ item.quotas.total_ram_mb }}'
-        gigabytes: '{{ item.quotas.total_disk_gb }}'
-        volumes: '{{ item.quotas.total_volumes }}'
+        name: '{{ item.name | string }}'
+        instances: '{{ item.quotas.total_instances | int }}'
+        cores: '{{ item.quotas.total_cores | int }}'
+        ram: '{{ item.quotas.total_ram_mb | int }}'
+        gigabytes: '{{ item.quotas.total_disk_gb | int }}'
+        volumes: '{{ item.quotas.total_volumes | int }}'
       loop: '{{ osp_projects }}'
       when: create_openstack_projects == True
       tags:
@@ -72,10 +72,10 @@
           project_domain_name: '{{ openstack_project_domain_name | default("Default") }}'
           user_domain_name: '{{ openstack_user_domain_name | default("Default") }}'
         interface: '{{ osp_interface_type | default("public") }}'
-        user: '{{ item.user_name }}' 
-        role: '{{ item.project_role }}'
-        project: '{{ item.project }}'
-        domain: '{{ item.keystone_domain }}'
+        user: '{{ item.user_name | string }}' 
+        role: '{{ item.project_role | string }}'
+        project: '{{ item.project | string }}'
+        domain: '{{ item.keystone_domain | string }}'
         state: present
       loop: '{{ osp_role_assignment }}'
       no_log: true
@@ -93,12 +93,12 @@
           project_domain_name: '{{ openstack_project_domain_name | default("Default") }}'
           user_domain_name: '{{ openstack_user_domain_name | default("Default") }}'
         interface: '{{ osp_interface_type | default("public") }}'
-        project: '{{ item.network_project_owner | default("admin") }}'
-        name: '{{ item.net_name }}' 
-        external: '{{ item.net_external | default("false") }}'
-        shared: '{{ item.net_is_shared | default("false") }}'
-        provider_network_type: '{{ item.provider_network_type }}'
-        port_security_enabled: '{{ item.enable_port_security | default(true) }}'
+        project: '{{ item.network_project_owner | default("admin") | string }}'
+        name: '{{ item.net_name | string }}' 
+        external: '{{ item.net_external | default(false) | bool }}'
+        shared: '{{ item.net_is_shared | default(false) | bool }}'
+        provider_network_type: '{{ item.provider_network_type | default("geneve") | string }}'
+        port_security_enabled: '{{ item.enable_port_security | default(true) | int }}'
         state: present
       loop: '{{ osp_tenant_networks }}'
       when: create_tenant_networks == True
@@ -115,14 +115,14 @@
           project_domain_name: '{{ openstack_project_domain_name | default("Default") }}'
           user_domain_name: '{{ openstack_user_domain_name | default("Default") }}'
         interface: '{{ osp_interface_type | default("public") }}'
-        network_name: '{{ item.net_name }}'
-        project: '{{ item.network_project_owner | default("admin") }}'
-        name: '{{ item.subnets.subnet_name }}'
-        cidr: '{{ item.subnets.subnet_cidr }}'
-        gateway_ip: '{{ item.subnets.subnet_gateway }}'
-        allocation_pool_start: '{{ item.subnets.subnet_dhcp_start }}'
-        allocation_pool_end: '{{ item.subnets.subnet_dhcp_end }}'
-        enable_dhcp: '{{ item.subnets.subnet_enable_dhcp }}'
+        network_name: '{{ item.net_name | string }}'
+        project: '{{ item.network_project_owner | default("admin") | string }}'
+        name: '{{ item.subnets.subnet_name | string }}'
+        cidr: '{{ item.subnets.subnet_cidr | string }}'
+        gateway_ip: '{{ item.subnets.subnet_gateway | string }}'
+        allocation_pool_start: '{{ item.subnets.subnet_dhcp_start | string }}'
+        allocation_pool_end: '{{ item.subnets.subnet_dhcp_end | string }}'
+        enable_dhcp: '{{ item.subnets.subnet_enable_dhcp | default(true) | bool }}'
         dns_nameservers:
           - '{{ item.subnets.dns_1 }}'
           - '{{ item.subnets.dns_2 }}'
@@ -132,7 +132,7 @@
       tags:
         - create_tenant_networks
 
-    - name: Creating neutron routers
+    - name: Creating neutron routers ## needs work 02-25-2024 arl ## 
       openstack.cloud.router:
         auth:
           auth_url: '{{ openstack_auth_url }}'
@@ -143,8 +143,8 @@
           user_domain_name: '{{ openstack_user_domain_name | default("Default") }}'
         interface: '{{ osp_interface_type | default("public") }}'
         project: '{{ item.router_project_owner | default("admin") }}'
-        name: '{{ item.router_name }}' 
-        network: '{{ item.router_gateway_network }}'
+        name: '{{ item.router_name | string }}' 
+        network: '{{ item.router_gateway_network | string }}'
         interfaces: '{{ item.router_private_subnet_interface }}'
         state: present
       loop: '{{ osp_neutron_routers }}'
@@ -193,3 +193,4 @@
       when: create_project_security_groups == True
       tags:
         - create_security_group
+

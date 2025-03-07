@@ -132,6 +132,14 @@ osp_glance_images:
     image_hw_vif_multiqueue_enabled: true
     image_hw_scsi_model: virtio-scsi
     image_hw_disk_bus: scsi
+  - name: rhel-8.4
+    container_format: bare
+    disk_format: qcow2
+    source_image_name: rhel-8.4-x86_64-kvm.qcow2
+    image_is_public: true
+    image_hw_vif_multiqueue_enabled: true
+    image_hw_scsi_model: virtio-scsi
+    image_hw_disk_bus: scsi
   - name: rhel-8.9
     container_format: bare
     disk_format: qcow2

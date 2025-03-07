@@ -13,6 +13,7 @@
 # - creates neutron router
 # - creates security groups
 # - create security group rules
+# - create keypair rules
 ---
 - name: Begin to boostrap OpenStack project.
   hosts: ansible_executor
@@ -36,7 +37,7 @@
         state: present
         enabled: true
       loop: '{{ osp_projects }}'
-      when: create_openstack_projects == True
+      when: create_openstack_projects|bool == True
       tags:
         - create_project
 
@@ -57,7 +58,7 @@
         gigabytes: '{{ item.quotas.total_disk_gb | int }}'
         volumes: '{{ item.quotas.total_volumes | int }}'
       loop: '{{ osp_projects }}'
-      when: create_openstack_projects == True
+      when: create_openstack_projects|bool == True
       tags:
         - create_project
         - set_quotas
@@ -79,7 +80,7 @@
         state: present
       loop: '{{ osp_role_assignment }}'
       no_log: true
-      when: create_openstack_role_assignments == True
+      when: create_openstack_role_assignments|bool == True
       tags:
         - create_role_assignments
 
@@ -101,7 +102,7 @@
         port_security_enabled: '{{ item.enable_port_security | default(true) | int }}'
         state: present
       loop: '{{ osp_tenant_networks }}'
-      when: create_tenant_networks == True
+      when: create_tenant_networks|bool == True
       tags:
         - create_tenant_networks
 
@@ -128,7 +129,7 @@
           - '{{ item.subnets.dns_2 }}'
         state: present
       loop: '{{ osp_tenant_networks }}'
-      when: create_tenant_networks == True
+      when: create_tenant_networks|bool == True
       tags:
         - create_tenant_networks
 
@@ -148,7 +149,7 @@
         interfaces: '{{ item.router_private_subnet_interface }}'
         state: present
       loop: '{{ osp_neutron_routers }}'
-      when: create_neutron_routers == True
+      when: create_neutron_routers|bool == True
       tags:
         - create_routers
 
@@ -165,7 +166,7 @@
         project: '{{ item.secgroup_owner_project }}'
         state: present
       loop: '{{ osp_sec_groups }}'
-      when: create_project_security_groups == True
+      when: create_project_security_groups|bool == True
       tags:
         - create_security_group
 
@@ -190,7 +191,28 @@
       with_subelements:
         - '{{ osp_sec_groups }}'
         - sec_group_rules
-      when: create_project_security_groups == True
+      when: create_project_security_groups|bool == True
       tags:
         - create_security_group
 
+    - name: Upload existing public ssh key to OpenStack tenant (if defined)
+      openstack.cloud.keypair:
+        auth:
+          auth_url: '{{ openstack_auth_url }}'
+          username: '{{ openstack_tenant_auth_username }}'
+          password: '{{ openstack_tenant_auth_passwd }}'
+          project_name: '{{ item.name }}'
+          project_domain_name: '{{ item.keystone_domain | default("Default") }}'
+          user_domain_name: '{{ item.keystone_domain | default("Default") }}'
+        name: '{{ item.pub_key_name }}'
+        public_key_file: '{{ item.pub_key_path }}'
+        state: present
+      loop: '{{ osp_projects }}'
+      when: 
+        - create_project_key_pair|bool == True
+        - item.pub_key_name is defined
+        - item.pub_key_name | length > 0
+        - item.pub_key_path is defined
+        - item.pub_key_path | length > 0
+      tags:
+        - create_keypair

@@ -8,6 +8,12 @@ openstack_project_name: admin
 openstack_project_domain_name: Default
 openstack_user_domain_name: Default
 
+####################################
+# Tenant centric auth settings
+####################################
+#openstack_tenant_auth_username: THIS IS A VAULTED VARIABLE
+#openstack_tenant_auth_passwd:   THIS IS A VAULTED VARIABLE
+
 ##############################
 # Project and Users 
 ##############################
@@ -15,6 +21,7 @@ create_openstack_projects: true
 # in this example: domain_id: voltron  is a Keystone
 # domain with ldap authentication.
 #
+create_project_key_pair: True
 osp_projects:
   - name: voltron_labs
     keystone_domain: voltron
@@ -24,6 +31,8 @@ osp_projects:
       total_ram_mb: -1
       total_disk_gb: -1
       total_volumes: 100
+    pub_key_name: voltron_labs-user_key
+    pub_key_path: /home/arlaporte/.ssh/id_rsa.pub
 
 create_openstack_role_assignments: true
 # in this example: domain_id: voltron  is a Keystone
@@ -83,3 +92,4 @@ osp_sec_groups:
         port_range_max: -1
         protocol: icmp
         ethertype: IPv4
+

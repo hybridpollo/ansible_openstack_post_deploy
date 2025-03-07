@@ -34,7 +34,7 @@
         disk: '{{ item.disk_gb | int }}'
         state: present
       loop: '{{ osp_flavors }}'
-      when: create_osp_flavors == True
+      when: create_osp_flavors|bool == True
       tags:
         - create_flavors
 
@@ -43,7 +43,7 @@
         url: '{{ source_image_base_url }}/{{ item.source_image_name }}'
         dest: '{{ source_image_download_dir }}/{{ item.source_image_name }}'
       loop:  '{{ osp_glance_images }}'
-      when: upload_glance_images == True
+      when: upload_glance_images|bool == True
       tags:
         -  download_glance_images
         -  upload_glance_images
@@ -69,7 +69,7 @@
           hw_scsi_model: '{{ item.image_hw_scsi_model | default("virtio-scsi") | string }}'
           hw_disk_bus: '{{ item.image_hw_disk_bus | default("scsi") | string }}'
       loop: '{{ osp_glance_images }}'
-      when: upload_glance_images == True
+      when: upload_glance_images|bool == True
       tags:
         -  upload_glance_images
 
@@ -92,7 +92,7 @@
         port_security_enabled: '{{ item.enable_port_security | default(true) | int }}'
         state: present
       loop: '{{ osp_provider_networks }}'
-      when: create_provider_networks == True
+      when: create_provider_networks|bool == True
       tags:
         - create_provider_networks
 
@@ -118,7 +118,7 @@
           - '{{ item.subnets.dns_2 }}'
         state: present
       loop: '{{ osp_provider_networks }}'
-      when: create_provider_networks == True 
+      when: create_provider_networks|bool == True 
       tags:
         - create_provider_networks
 
@@ -135,7 +135,7 @@
         project: '{{ item.secgroup_owner_project }}'
         state: present
       loop: '{{ osp_sec_groups }}'
-      when: create_project_security_groups == True 
+      when: create_project_security_groups|bool == True 
       tags:
         - create_security_group
 
@@ -160,6 +160,6 @@
       with_subelements: 
         - '{{ osp_sec_groups }}'
         - sec_group_rules
-      when: create_project_security_groups == True 
+      when: create_project_security_groups|bool == True 
       tags:
         - create_security_group

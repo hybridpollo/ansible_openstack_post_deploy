@@ -17,7 +17,29 @@
   vars_files:
     - vars/vaulted/openstack_auth.yml
     - vars/openstack_resources_shared.yml
+
   tasks:
+    - name: Set OpenStack quotas for the admin project
+      openstack.cloud.quota:
+        auth:
+          auth_url: '{{ openstack_auth_url }}'
+          username: '{{ openstack_username }}'
+          password: '{{ openstack_user_passwd }}'
+          project_name: '{{ openstack_project_name }}'
+          project_domain_name: '{{ openstack_project_domain_name | default("Default") }}'
+          user_domain_name: '{{ openstack_user_domain_name | default("Default") }}'
+        interface: '{{ osp_interface_type | default("public") }}'
+        name: '{{ item.name | string }}'
+        instances: '{{ item.quotas.total_instances | int }}'
+        cores: '{{ item.quotas.total_cores | int }}'
+        ram: '{{ item.quotas.total_ram_mb | int }}'
+        gigabytes: '{{ item.quotas.total_disk_gb | int }}'
+        volumes: '{{ item.quotas.total_volumes | int }}'
+      loop: '{{ osp_projects }}'
+      when: create_openstack_quota|bool == True
+      tags:
+        - set_quotas
+
     - name: Create the default OpenStack flavors 
       openstack.cloud.compute_flavor:
         auth:

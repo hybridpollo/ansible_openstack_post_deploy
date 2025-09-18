@@ -18,32 +18,72 @@ openstack_user_domain_name: Default
 # Project and Users 
 ##############################
 create_openstack_projects: true
+create_openstack_role_assignments: true
+create_project_key_pair: true
 # in this example: domain_id: voltron  is a Keystone
 # domain with ldap authentication.
 #
-create_project_key_pair: True
 osp_projects:
-  - name: voltron_labs
-    keystone_domain: voltron
+  - name: voltron_development
+    keystone_domain_project: acanorex
+    role_assignment:
+      user_name: arlaporte
+      keystone_domain_user: acanorex
+      project_role: admin
     quotas:
-      total_instances: 50
+      total_instances: 10
       total_cores: -1
       total_ram_mb: -1
       total_disk_gb: -1
       total_volumes: 100
-    pub_key_name: voltron_labs-user_key
+    pub_key_name: voltron-user_key
+    pub_key_path: /home/arlaporte/.ssh/id_rsa.pub
+  - name: ultraman_engineering
+    keystone_domain_project: acanorex
+    role_assignment:
+      user_name: arlaporte
+      keystone_domain_user: acanorex
+      project_role: admin
+    quotas:
+      total_instances: 10
+      total_cores: -1
+      total_ram_mb: -1
+      total_disk_gb: -1
+      total_volumes: 100
+    pub_key_name: ultraman-user_key
+    pub_key_path: /home/arlaporte/.ssh/id_rsa.pub
+  - name: rangers_assembly
+    keystone_domain_project: acanorex
+    role_assignment:
+      user_name: arlaporte
+      keystone_domain_user: acanorex
+      project_role: admin
+    quotas:
+      total_instances: 10
+      total_cores: -1
+      total_ram_mb: -1
+      total_disk_gb: -1
+      total_volumes: 100
+    pub_key_name: rangers-user_key
     pub_key_path: /home/arlaporte/.ssh/id_rsa.pub
 
-create_openstack_role_assignments: true
-# in this example: domain_id: voltron  is a Keystone
+# in this example: domain_id: acanorex is a Keystone
 # domain with ldap authentication.
 # The user already exists in the ldap server
 #  and user creation is not necessary
-osp_role_assignment:
-  - user_name: arlaporte
-    project: voltron_labs
-    project_role: admin
-    keystone_domain: voltron
+#osp_role_assignment:
+#  - user_name: arlaporte
+#    project: voltron_development
+#    project_role: admin
+#    keystone_domain: acanorex
+#  - user_name: arlaporte
+#    project: ultraman_engineering
+#    project_role: admin
+#    keystone_domain: acanorex
+#  - user_name: arlaporte
+#    project: rangers_assembly
+#    project_role: admin
+#    keystone_domain: acanorex
 
 ##############################
 # Networks, Subnets and Routers

@@ -20,7 +20,7 @@
   become: false
   vars_files:
     - vars/vaulted/openstack_auth.yml
-    - vars/openstack_resources_voltron_labs.yml
+    - vars/openstack_resources_tenants.yml
   tasks:
     - name: Create OpenStack projects for this environment
       openstack.cloud.project:
@@ -32,7 +32,7 @@
           project_domain_name: '{{ openstack_project_domain_name | default("Default") }}'
           user_domain_name: '{{ openstack_user_domain_name | default("Default") }}'
         endpoint_type: '{{ osp_interface_type | default("public") }}'
-        domain_id: '{{ item.keystone_domain | string }}'
+        domain_id: '{{ item.keystone_domain_project | string }}'
         name: '{{ item.name | string }}'
         state: present
         enabled: true
@@ -40,6 +40,26 @@
       when: create_openstack_projects|bool == True
       tags:
         - create_project
+
+    - name: Create admin role assignment binding to new project
+      openstack.cloud.role_assignment:
+        auth:
+          auth_url: '{{ openstack_auth_url }}'
+          username: '{{ openstack_username }}'
+          password: '{{ openstack_user_passwd }}'
+          project_name: '{{ openstack_project_name }}'
+          project_domain_name: '{{ openstack_project_domain_name | default("Default") }}'
+          user_domain_name: '{{ openstack_user_domain_name | default("Default") }}'
+        interface: '{{ osp_interface_type | default("public") }}'
+        user: admin
+        role: admin
+        project: '{{ item.name | string }}'
+        state: present
+      loop: '{{ osp_projects }}'
+      no_log: false
+      when: create_openstack_role_assignments|bool == True
+      tags:
+        - create_admin_role_assignments
 
     - name: Set OpenStack quotas for project
       openstack.cloud.quota:
@@ -73,12 +93,12 @@
           project_domain_name: '{{ openstack_project_domain_name | default("Default") }}'
           user_domain_name: '{{ openstack_user_domain_name | default("Default") }}'
         interface: '{{ osp_interface_type | default("public") }}'
-        user: '{{ item.user_name | string }}' 
-        role: '{{ item.project_role | string }}'
-        project: '{{ item.project | string }}'
-        domain: '{{ item.keystone_domain | string }}'
+        user: '{{ item.role_assignment.user_name | string }}' 
+        role: '{{ item.role_assignment.project_role | string }}'
+        project: '{{ item.name | string }}'
+        domain: '{{ item.keystone_domain_project | string }}'
         state: present
-      loop: '{{ osp_role_assignment }}'
+      loop: '{{ osp_projects }}'
       no_log: true
       when: create_openstack_role_assignments|bool == True
       tags:
@@ -199,11 +219,11 @@
       openstack.cloud.keypair:
         auth:
           auth_url: '{{ openstack_auth_url }}'
-          username: '{{ openstack_tenant_auth_username }}'
-          password: '{{ openstack_tenant_auth_passwd }}'
+          username: '{{ openstack_username }}'
+          password: '{{ openstack_user_passwd }}'
           project_name: '{{ item.name }}'
-          project_domain_name: '{{ item.keystone_domain | default("Default") }}'
-          user_domain_name: '{{ item.keystone_domain | default("Default") }}'
+          project_domain_name: '{{ item.keystone_domain_project | default("Default") }}'
+          user_domain_name: '{{ openstack_user_domain_name | default("Default") }}'
         name: '{{ item.pub_key_name }}'
         public_key_file: '{{ item.pub_key_path }}'
         state: present

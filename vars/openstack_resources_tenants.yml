@@ -11,24 +11,25 @@ openstack_user_domain_name: Default
 ####################################
 # Tenant centric auth settings
 ####################################
-#openstack_tenant_auth_username: THIS IS A VAULTED VARIABLE
-#openstack_tenant_auth_passwd:   THIS IS A VAULTED VARIABLE
+# openstack_tenant_auth_username: THIS IS A VAULTED VARIABLE
+# openstack_tenant_auth_passwd:   THIS IS A VAULTED VARIABLE
 
 ##############################
 # Project and Users 
 ##############################
 create_openstack_projects: true
 create_openstack_role_assignments: true
-create_project_key_pair: true
+create_project_security_group: true
+create_project_security_group_rules: true
 # in this example: domain_id: voltron  is a Keystone
 # domain with ldap authentication.
 #
 osp_projects:
   - name: voltron_development
-    keystone_domain_project: acanorex
+    project_domain: acanorex
+    user_domain: acanorex
     role_assignment:
       user_name: arlaporte
-      keystone_domain_user: acanorex
       project_role: admin
     quotas:
       total_instances: 10
@@ -36,13 +37,27 @@ osp_projects:
       total_ram_mb: -1
       total_disk_gb: -1
       total_volumes: 100
-    pub_key_name: voltron-user_key
-    pub_key_path: /home/arlaporte/.ssh/id_rsa.pub
+    bootstrap_sg_name: allow_ssh_icmp
+    bootstrap_sg_rules:
+      - parent_sec_group: allow_ssh_icmp
+        direction: ingress
+        source_network: 0.0.0.0/0
+        port_range_min: 22
+        port_range_max: 22
+        protocol: tcp
+        ethertype: IPv4
+      - parent_sec_group: allow_ssh_icmp
+        direction: ingress
+        source_network: 0.0.0.0/0
+        port_range_min: -1
+        port_range_max: -1
+        protocol: icmp
+        ethertype: IPv4
   - name: ultraman_engineering
-    keystone_domain_project: acanorex
+    project_domain: acanorex
+    user_domain: acanorex
     role_assignment:
       user_name: arlaporte
-      keystone_domain_user: acanorex
       project_role: admin
     quotas:
       total_instances: 10
@@ -50,13 +65,27 @@ osp_projects:
       total_ram_mb: -1
       total_disk_gb: -1
       total_volumes: 100
-    pub_key_name: ultraman-user_key
-    pub_key_path: /home/arlaporte/.ssh/id_rsa.pub
+    bootstrap_sg_name: allow_ssh_icmp
+    bootstrap_sg_rules:
+      - parent_sec_group: allow_ssh_icmp
+        direction: ingress
+        source_network: 0.0.0.0/0
+        port_range_min: 22
+        port_range_max: 22
+        protocol: tcp
+        ethertype: IPv4
+      - parent_sec_group: allow_ssh_icmp
+        direction: ingress
+        source_network: 0.0.0.0/0
+        port_range_min: -1
+        port_range_max: -1
+        protocol: icmp
+        ethertype: IPv4
   - name: rangers_assembly
-    keystone_domain_project: acanorex
+    project_domain: acanorex
+    user_domain: acanorex
     role_assignment:
       user_name: arlaporte
-      keystone_domain_user: acanorex
       project_role: admin
     quotas:
       total_instances: 10
@@ -64,26 +93,22 @@ osp_projects:
       total_ram_mb: -1
       total_disk_gb: -1
       total_volumes: 100
-    pub_key_name: rangers-user_key
-    pub_key_path: /home/arlaporte/.ssh/id_rsa.pub
-
-# in this example: domain_id: acanorex is a Keystone
-# domain with ldap authentication.
-# The user already exists in the ldap server
-#  and user creation is not necessary
-#osp_role_assignment:
-#  - user_name: arlaporte
-#    project: voltron_development
-#    project_role: admin
-#    keystone_domain: acanorex
-#  - user_name: arlaporte
-#    project: ultraman_engineering
-#    project_role: admin
-#    keystone_domain: acanorex
-#  - user_name: arlaporte
-#    project: rangers_assembly
-#    project_role: admin
-#    keystone_domain: acanorex
+    bootstrap_sg_name: allow_ssh_icmp
+    bootstrap_sg_rules:
+      - parent_sec_group: allow_ssh_icmp
+        direction: ingress
+        source_network: 0.0.0.0/0
+        port_range_min: 22
+        port_range_max: 22
+        protocol: tcp
+        ethertype: IPv4
+      - parent_sec_group: allow_ssh_icmp
+        direction: ingress
+        source_network: 0.0.0.0/0
+        port_range_min: -1
+        port_range_max: -1
+        protocol: icmp
+        ethertype: IPv4
 
 ##############################
 # Networks, Subnets and Routers
@@ -111,25 +136,4 @@ osp_neutron_routers:
     router_project_owner: "{{ osp_projects.0.name }}"
     router_gateway_network: external_shared_net
     router_private_subnet_interface: "{{ osp_projects.0.name }}_tenant_subnet"
-
-##############################
-# Security Groups and Rules
-##############################
-create_project_security_groups: true
-osp_sec_groups:
-  - secgroup_name: "allow_ssh_icmp_{{osp_projects.0.name }}"
-    secgroup_owner_project: "{{ osp_projects.0.name }}"
-    sec_group_rules:
-      - direction: ingress
-        source_network: 0.0.0.0/0
-        port_range_min: 22
-        port_range_max: 22
-        protocol: tcp
-        ethertype: IPv4
-      - direction: ingress 
-        source_network: 0.0.0.0/0
-        port_range_min: -1
-        port_range_max: -1
-        protocol: icmp
-        ethertype: IPv4
 

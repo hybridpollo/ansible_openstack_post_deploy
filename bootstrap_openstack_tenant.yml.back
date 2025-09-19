@@ -13,6 +13,7 @@
 # - creates neutron router
 # - creates security groups
 # - create security group rules
+# - create keypair rules
 ---
 - name: Begin to boostrap OpenStack project.
   hosts: ansible_executor
@@ -40,7 +41,7 @@
       tags:
         - create_project
 
-    - name: Configure super admin role assignment to project
+    - name: Create admin role assignment binding to new project
       openstack.cloud.role_assignment:
         auth:
           auth_url: '{{ openstack_auth_url }}'
@@ -102,46 +103,6 @@
       when: create_openstack_role_assignments|bool == True
       tags:
         - create_role_assignments
-
-    - name: Creating project security groups
-      openstack.cloud.security_group:
-        auth:
-          auth_url: '{{ openstack_auth_url }}'
-          username: '{{ openstack_username }}'
-          password: '{{ openstack_user_passwd }}'
-          project_name: '{{ openstack_project_name }}'
-          project_domain_name: '{{ openstack_project_domain | default("Default") }}'
-          user_domain_name: '{{ openstack_user_domain_name | default("Default") }}'
-        name: '{{ item.bootstrap_sg_name }}'
-        project: '{{ item.name }}'
-        state: present
-      loop: '{{ osp_projects }}'
-      when: create_project_security_group|bool == True
-      tags:
-        - create_sg
-
-    - name: Creating project security group rules
-      openstack.cloud.security_group_rule:
-        auth:
-          auth_url: '{{ openstack_auth_url }}'
-          username: '{{ openstack_username }}'
-          password: '{{ openstack_user_passwd }}'
-          project_name: '{{ openstack_project_name }}'
-          project_domain_name: '{{ openstack_project_domain | default("Default") }}'
-          user_domain_name: '{{ openstack_user_domain_name | default("Default") }}'
-        security_group: '{{ item.0.bootstrap_sg_name | string }}'
-        project: '{{ item.0.name | string }}'
-        direction: '{{ item.1.direction | default("ingress" | string) }}'
-        ethertype: '{{ item.1.ethertype | default("IPv4" | string) }}'
-        protocol: '{{ item.1.protocol | default("tcp" | string) }}'
-        remote_ip_prefix: '{{ item.1.source_network | default("0.0.0.0.0" | string) }}'
-        port_range_min: '{{ item.1.port_range_min | int }}'
-        port_range_max: '{{ item.1.port_range_max | int }}'
-        state: present
-      loop: "{{ osp_projects | subelements('bootstrap_sg_rules') }}"
-      when: create_project_security_group_rules|bool == True
-      tags:
-        - create_sg_rules
 
     - name: Creating neutron tenant network resources
       openstack.cloud.network:
@@ -212,6 +173,63 @@
       tags:
         - create_routers
 
+    - name: Creating project security groups
+      openstack.cloud.security_group:
+        auth:
+          auth_url: '{{ openstack_auth_url }}'
+          username: '{{ openstack_username }}'
+          password: '{{ openstack_user_passwd }}'
+          project_name: '{{ openstack_project_name }}'
+          project_domain_name: '{{ openstack_project_domain | default("Default") }}'
+          user_domain_name: '{{ openstack_user_domain_name | default("Default") }}'
+        name: '{{ item.osp_sec_groups[0].secgroup_name }}'
+        project: '{{ item.name }}'
+        state: present
+      loop: '{{ osp_projects }}'
+      when: create_project_security_groups|bool == True
+      tags:
+        - create_security_group
 
-
-
+    - name: Creating project security group rules
+      openstack.cloud.security_group_rule:
+        auth:
+          auth_url: '{{ openstack_auth_url }}'
+          username: '{{ openstack_username }}'
+          password: '{{ openstack_user_passwd }}'
+          project_name: '{{ openstack_project_name }}'
+          project_domain_name: '{{ openstack_project_domain | default("Default") }}'
+          user_domain_name: '{{ openstack_user_domain_name | default("Default") }}'
+        security_group: '{{ item.0.secgroup_name | string }}'
+        project: '{{ openstack_project_name | string }}'
+        direction: '{{ item.1.direction | default("ingress") }}'
+        ethertype: '{{ item.1.ethertype | default("IPv4") }}'
+        protocol: '{{ item.1.protocol | default("tcp") }}'
+        remote_ip_prefix: '{{ item.1.source_network | default("0.0.0.0/0") }}'
+        port_range_min: '{{ item.1.port_range_min | default(-1) | int }}'
+        port_range_max: '{{ item.1.port_range_max | default(-1) | int }}'
+        state: present
+      loop: "{{ osp_projects | subelements('osp_sec_groups', {'skip_missing': true}) | subelements('sec_group_rules') }}"
+      tags:
+        - create_security_group
+   
+    - name: Upload existing public ssh key to OpenStack tenant (if defined)
+      openstack.cloud.keypair:
+        auth:
+          auth_url: '{{ openstack_auth_url }}'
+          username: '{{ openstack_username }}'
+          password: '{{ openstack_user_passwd }}'
+          project_name: '{{ item.name }}'
+          project_domain_name: '{{ item.keystone_domain_project | default("Default") }}'
+          user_domain_name: '{{ openstack_user_domain_name | default("Default") }}'
+        name: '{{ item.pub_key_name }}'
+        public_key_file: '{{ item.pub_key_path }}'
+        state: present
+      loop: '{{ osp_projects }}'
+      when: 
+        - create_project_key_pair|bool == True
+        - item.pub_key_name is defined
+        - item.pub_key_name | length > 0
+        - item.pub_key_path is defined
+        - item.pub_key_path | length > 0
+      tags:
+        - create_keypair

@@ -32,7 +32,7 @@ osp_projects:
       user_name: arlaporte
       project_role: admin
     quotas:
-      total_instances: 10
+      total_instances: 20
       total_cores: -1
       total_ram_mb: -1
       total_disk_gb: -1
@@ -60,7 +60,7 @@ osp_projects:
       user_name: arlaporte
       project_role: admin
     quotas:
-      total_instances: 10
+      total_instances: 20
       total_cores: -1
       total_ram_mb: -1
       total_disk_gb: -1
@@ -88,7 +88,7 @@ osp_projects:
       user_name: arlaporte
       project_role: admin
     quotas:
-      total_instances: 10
+      total_instances: 5
       total_cores: -1
       total_ram_mb: -1
       total_disk_gb: -1

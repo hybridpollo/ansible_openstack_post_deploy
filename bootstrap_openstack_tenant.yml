@@ -31,7 +31,7 @@
           project_domain_name: '{{ openstack_project_domain_name | default("Default") }}'
           user_domain_name: '{{ openstack_user_domain_name | default("Default") }}'
         endpoint_type: '{{ osp_interface_type | default("public") }}'
-        domain_id: '{{ item.keystone_domain_project | string }}'
+        domain_id: '{{ item.project_domain | string }}'
         name: '{{ item.name | string }}'
         state: present
         enabled: true
@@ -95,7 +95,7 @@
         user: '{{ item.role_assignment.user_name | string }}' 
         role: '{{ item.role_assignment.project_role | string }}'
         project: '{{ item.name | string }}'
-        domain: '{{ item.keystone_domain_project | string }}'
+        domain: '{{ item.project_domain | string }}'
         state: present
       loop: '{{ osp_projects }}'
       no_log: true

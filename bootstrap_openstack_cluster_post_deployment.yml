@@ -15,7 +15,7 @@
   hosts: ansible_executor
   become: false
   vars_files:
-    - vars/vaulted/openstack_auth.yml
+    - vars/vaulted/openstack_auth.yaml
     - vars/openstack_resources_shared.yml
 
   tasks:

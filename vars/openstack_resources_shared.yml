@@ -20,7 +20,7 @@ osp_projects:
   - name: admin
     keystone_domain: Default
     quotas:
-      total_instances: 50
+      total_instances: 100
       total_cores: -1
       total_ram_mb: -1
       total_disk_gb: -1
@@ -85,15 +85,6 @@ osp_flavors:
     vcpus:  16
     ram_mb: 65536
     disk_gb: 500
-# flavors used for openshift infrastructure
-  - name: ocp-control
-    vcpus:  16
-    ram_mb: 32768
-    disk_gb: 100
-  - name: ocp-compute
-    vcpus:  32
-    ram_mb: 65534
-    disk_gb: 200
 
 #################################
 # Glance image creation variables
@@ -103,7 +94,7 @@ osp_flavors:
 # hosting the qcow2 images for fetching and uploading
 # to Glance
 upload_glance_images: true
-source_image_base_url: http://kvm01.acanorex.io/pub/os_images
+source_image_base_url: http://172.16.254.10/pub/os_images
 source_image_download_dir: /tmp
 osp_glance_images:
   - name: cirros-0.6.2
@@ -122,14 +113,6 @@ osp_glance_images:
     image_hw_vif_multiqueue_enabled: true
     image_hw_scsi_model: virtio-scsi
     image_hw_disk_bus: scsi
-  - name: centos-7-9
-    container_format: bare
-    disk_format: qcow2
-    source_image_name: CentOS-7-x86_64-GenericCloud.qcow2
-    image_is_public: true
-    image_hw_vif_multiqueue_enabled: true
-    image_hw_scsi_model: virtio-scsi
-    image_hw_disk_bus: scsi
   - name: centos-8-streams
     container_format: bare
     disk_format: qcow2
@@ -142,30 +125,6 @@ osp_glance_images:
     container_format: bare
     disk_format: qcow2
     source_image_name: CentOS-Stream-GenericCloud-9-20240101.0.x86_64.qcow2
-    image_is_public: true
-    image_hw_vif_multiqueue_enabled: true
-    image_hw_scsi_model: virtio-scsi
-    image_hw_disk_bus: scsi
-  - name: rhel-8.4
-    container_format: bare
-    disk_format: qcow2
-    source_image_name: rhel-8.4-x86_64-kvm.qcow2
-    image_is_public: true
-    image_hw_vif_multiqueue_enabled: true
-    image_hw_scsi_model: virtio-scsi
-    image_hw_disk_bus: scsi
-  - name: rhel-8.9
-    container_format: bare
-    disk_format: qcow2
-    source_image_name: rhel-8.9-x86_64-kvm.qcow2
-    image_is_public: true
-    image_hw_vif_multiqueue_enabled: true
-    image_hw_scsi_model: virtio-scsi
-    image_hw_disk_bus: scsi
-  - name: rhel-9.2
-    container_format: bare
-    disk_format: qcow2
-    source_image_name: rhel-9.2-x86_64-kvm.qcow2
     image_is_public: true
     image_hw_vif_multiqueue_enabled: true
     image_hw_scsi_model: virtio-scsi
@@ -213,7 +172,7 @@ osp_sec_groups:
 # Neutron Networks, Subnets
 # TODO: Neutron routers
 ##############################
-create_provider_networks: true
+create_provider_networks: false
 osp_provider_networks:
   - net_name: '{{ openstack_network_name }}'
     network_project_owner: '{{ openstack_project_name }}'

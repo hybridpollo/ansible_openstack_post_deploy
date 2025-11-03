@@ -3,4 +3,3 @@ ansible_executor:
   hosts:
     localhost:
       ansible_connection: local
-      ansible_python_interpreter: /home/arlaporte/venvs/vworkspace/bin/python3

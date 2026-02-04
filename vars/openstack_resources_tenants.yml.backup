@@ -25,9 +25,9 @@ create_project_security_group_rules: true
 # domain with ldap authentication.
 #
 osp_projects:
-  - name: potaytoes-prj
-    project_domain: Default
-    user_domain: Default
+  - name: voltron_development
+    project_domain: acanorex
+    user_domain: acanorex
     role_assignment:
       user_name: arlaporte
       project_role: admin
@@ -53,9 +53,9 @@ osp_projects:
         port_range_max: -1
         protocol: icmp
         ethertype: IPv4
-  - name: tomaytoes-prj
-    project_domain: Default
-    user_domain: Default
+  - name: ultraman_engineering
+    project_domain: acanorex
+    user_domain: acanorex
     role_assignment:
       user_name: arlaporte
       project_role: admin
@@ -81,14 +81,14 @@ osp_projects:
         port_range_max: -1
         protocol: icmp
         ethertype: IPv4
-  - name: greenbeans-prj
-    project_domain: Default
-    user_domain: Default
+  - name: rangers_assembly
+    project_domain: acanorex
+    user_domain: acanorex
     role_assignment:
       user_name: arlaporte
       project_role: admin
     quotas:
-      total_instances: 20
+      total_instances: 5
       total_cores: -1
       total_ram_mb: -1
       total_disk_gb: -1

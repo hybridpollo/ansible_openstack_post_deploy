@@ -9,8 +9,8 @@
 openstack_project_name: admin
 openstack_project_domain_name: Default
 openstack_user_domain_name: Default
-openstack_network_name: external_shared_net
-openstack_subnet_name: external_shared_subnet
+openstack_network_name: external_1129_shared_net
+openstack_subnet_name: external_1129_shared_subnet
 
 ###################################
 # Quota setting variables
@@ -172,7 +172,7 @@ osp_sec_groups:
 # Neutron Networks, Subnets
 # TODO: Neutron routers
 ##############################
-create_provider_networks: false
+create_provider_networks: true
 osp_provider_networks:
   - net_name: '{{ openstack_network_name }}'
     network_project_owner: '{{ openstack_project_name }}'
@@ -180,13 +180,13 @@ osp_provider_networks:
     net_is_shared: true
     physical_network: datacentre
     provider_network_type: vlan
-    net_segment_id: 200
+    net_segment_id: 1129
     subnets:
       subnet_name: '{{ openstack_subnet_name }}'
       subnet_enable_dhcp: true
-      subnet_cidr: 192.168.200.0/24
-      subnet_gateway: 192.168.200.1
-      subnet_dhcp_start: 192.168.200.30
-      subnet_dhcp_end: 192.168.200.254
-      dns_1: 172.25.49.253
-      dns_2: 172.31.103.254
+      subnet_cidr: 172.20.155.0/24
+      subnet_gateway: 172.20.155.1
+      subnet_dhcp_start: 172.20.155.30
+      subnet_dhcp_end: 172.20.155.254
+      dns_1: 1.2.3.4
+      dns_2: 8.8.8.8
